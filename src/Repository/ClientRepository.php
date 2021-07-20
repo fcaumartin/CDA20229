@@ -3,8 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Client;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\ResultSetMapping;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @method Client|null find($id, $lockMode = null, $lockVersion = null)
@@ -14,10 +16,52 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class ClientRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private $em;
+
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $em)
     {
         parent::__construct($registry, Client::class);
+        $this->em = $em;
     }
+
+    public function findAllByAdresse($adresse) {
+        $query = $this
+        ->createQueryBuilder('c')
+        ->select("c", "c.nom as nom_client", "c.adresse", "g.nom")
+        ->join("c.groupe", "g")
+        ->where("c.adresse like :adresse")
+        ->setParameter("adresse", "%" . $adresse . "%");
+
+        // dd($query->getQuery());
+
+        return $query->getQuery()->getResult();
+    }
+
+    public function testDQL() {
+        $query = $this->createQuery('
+            SELECT c
+            FROM App\Entity\Client c
+            WHERE c.adresse like :adresse
+        ')
+        ->setParameter("adresse", "%a%");
+
+        return $query->getResult();
+    }
+
+    public function testSQL() {
+        $rsm = new ResultSetMapping();
+
+        $query = $this->em->createNativeQuery('
+            SELECT id, nom, adresse 
+            FROM client 
+            WHERE adresse = ?
+        ', $rsm);
+
+        $query->setParameter(1, 'amiens');
+
+        $users = $query->getResult();
+    }
+
 
     // /**
     //  * @return Client[] Returns an array of Client objects

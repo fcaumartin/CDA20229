@@ -34,7 +34,7 @@ class Client
 
     /**
      * @ORM\ManyToOne(targetEntity=Groupe::class, inversedBy="clients", fetch="EAGER")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $groupe;
 

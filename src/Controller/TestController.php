@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 
 class TestController extends AbstractController
 {
@@ -68,12 +69,64 @@ class TestController extends AbstractController
         $repo = $em->getRepository(Client::class);
         $clients = $repo->findAll();
 
-        foreach ($clients as $value) {
-            $value->getGroupe()->getNom();
-        }
+        // foreach ($clients as $value) {
+        //     $value->getGroupe()->getNom();
+        // }
+
+        // dd($clients);
+
+        return $this->render("test/test3.html.twig", [
+            "clients" => $clients
+        ]);
+    }
+
+    /**
+     * @Route("/test4", name="test4")
+     */
+    public function index4(EntityManagerInterface $em, Request $request): Response
+    {
+        
+        $ville = $request->query->get("ville");
+        $repo = $em->getRepository(Client::class);
+        $clients = $repo->findAllByAdresse($ville);
+        // $clients = $repo->findBy([ "adresse" => $ville]);
 
         dd($clients);
 
-        return new Response("ok");
+        return $this->render("test/test3.html.twig", [
+            "clients" => $clients
+        ]);
+    }
+
+    /**
+     * @Route("/test5", name="test5")
+     */
+    public function index5(EntityManagerInterface $em, Request $request): Response
+    {
+        if ("POST" === $request->getMethod()) {
+            $data = $request->request->all();
+            //dd($data);
+
+            $cli = new Client();
+            $cli->setNom($data["nom"]);
+            $cli->setPrenom($data["prenom"]);
+            $cli->setAdresse("");
+
+            $em->persist($cli);
+            $em->flush();
+
+            $photo = $request->files->get("photo");
+            //dd($photo);
+            //$this->getParameter("%kernel.project_dir%");
+            $photo->move("uploads", $cli->getId() . ".png");
+
+
+            return $this->redirectToRoute("test3");
+        }
+        
+
+        return $this->render("test/test5.html.twig", [
+            
+        ]);
     }
 }
